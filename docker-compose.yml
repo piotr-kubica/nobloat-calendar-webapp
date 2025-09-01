@@ -2,9 +2,9 @@ services:
   frontend:
     build: ./frontend
     expose:
-      - "5173"             # for internal access (Cloudflared)
+      - "5173"
     ports:
-      - "5173:5173"        # if you want to reach it directly on the Pi
+      - "5173:5173"
     depends_on:
       - backend
     restart: unless-stopped
