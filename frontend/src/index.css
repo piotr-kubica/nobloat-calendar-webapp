@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* desktop default */
+html {
+  font-size: 18px !important;
+}
+
+/* mobile — use a wider breakpoint and fall back to !important for testing */
+@media (max-width: 960px) {
+  html {
+    font-size: 32px !important;
+  }
+}
+
+/* also provide a device-width fallback if needed */
+@media (max-device-width: 960px) {
+  html {
+    font-size: 32px !important;
+  }
+}

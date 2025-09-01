@@ -1,0 +1,20 @@
+services:
+  frontend:
+    build: ./frontend
+    expose:
+      - "5173"             # for internal access (Cloudflared)
+    ports:
+      - "5173:5173"        # if you want to reach it directly on the Pi
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    expose: ["5000"]
+    volumes:
+      - backend_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  backend_data:
