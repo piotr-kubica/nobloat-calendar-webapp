@@ -21,7 +21,7 @@ app.config.update(
     SESSION_COOKIE_DOMAIN=os.environ.get("COOKIE_DOMAIN", ".yourdomain.com")  # share cookie across subdomains (optional but useful)
 )
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])  # "https://yourdomain.com"
+CORS(app, supports_credentials=True, origins=os.getenv("DOMAIN_ORIGINS", "").split(","))  # "https://yourdomain.com"
 
 # Keep failed attempts in memory (for rate-limiting)
 FAILED_LOGINS = {}
@@ -63,13 +63,25 @@ def init_db():
                 )
             """)
 
-            # Create demo user if not exists
-            c.execute("SELECT id FROM users WHERE username = ?", ("demouser",))
-            if not c.fetchone():
-                hashed_demo = bcrypt.hashpw("nobloat".encode(), bcrypt.gensalt())
-                c.execute("INSERT INTO users (username, password) VALUES (?, ?)", ("demouser", hashed_demo))
-
             conn.commit()
+
+            sql_create_user("demosuer", "nobloat", conn)
+
+
+def sql_create_user(username, password, connection):
+    # Create demo user if not exists
+    c = connection.cursor()
+    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+
+    try:
+        c.execute("SELECT id FROM users WHERE username = ?", (username,))
+        if not c.fetchone():
+            c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed))
+            c.commit()
+            return True
+        return False
+    except sqlite3.IntegrityError:
+        return False
 
 
 def login_required(f):
