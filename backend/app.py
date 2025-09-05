@@ -18,7 +18,7 @@ app.permanent_session_lifetime = timedelta(days=7)
 app.config.update(
     SESSION_COOKIE_SAMESITE="Lax",   # same-site requests (subdomains count as same-site)
     SESSION_COOKIE_SECURE=True,      # only send over HTTPS (Cloudflare edge is HTTPS)
-    # SESSION_COOKIE_DOMAIN=".yourdomain.com"  # share cookie across subdomains (optional but useful)
+    SESSION_COOKIE_DOMAIN=os.environ.get("COOKIE_DOMAIN", ".yourdomain.com")  # share cookie across subdomains (optional but useful)
 )
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 CORS(app, supports_credentials=True, origins=["http://localhost:5173"])  # "https://yourdomain.com"
