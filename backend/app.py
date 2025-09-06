@@ -36,6 +36,7 @@ DB = os.path.join(DB_DIR, "activities.db")
 
 
 def init_db():
+    display_env_vars()
     os.makedirs(DB_DIR, exist_ok=True)
 
     # Only initialize if DB doesn't exist
@@ -78,6 +79,12 @@ def read_users_from_env():
     user_pairs = [entry.split(":", 1) for entry in users_env.split(",") if ":" in entry]
     users_dict = {user: pwd for user, pwd in user_pairs}
     return users_dict
+
+
+def display_env_vars():
+    print("Current Environment Variables:")
+    for key, value in os.environ.items():
+        print(f"{key}: {value}")
 
 
 def sql_create_user(username, password, connection):
