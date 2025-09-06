@@ -1,3 +1,5 @@
+Vue + Flask web app for simple calendar marking / note taking.
+
 I'm using portainer to directly deploy from github repository (Create stack -> Repository).
 
 The app contains default user __demouser__ with password __nobloat__.
