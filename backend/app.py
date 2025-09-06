@@ -66,7 +66,7 @@ def init_db():
                     FOREIGN KEY(user_id) REFERENCES users(id)
                 )
             """)
-            c.commit()
+            conn.commit()
             # Create users from environment variable
             for user, pwd in read_users_from_env().items():
                 sql_create_user(user, pwd, conn)
@@ -92,7 +92,7 @@ def sql_create_user(username, password, connection):
                 "INSERT INTO users (username, password) VALUES (?, ?)",
                 (username, hashed),
             )
-            c.commit()
+            connection.commit()
             return True
         return False
     except sqlite3.IntegrityError:
