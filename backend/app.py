@@ -10,6 +10,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import sys
 import logging
 from dotenv import load_dotenv
+from contextlib import contextmanager
 
 load_dotenv()
 
@@ -55,32 +56,33 @@ def init_db():
         logger.info("Database not found. Creating %s...", DB)
 
         with sqlite3.connect(DB) as conn:
-            c = conn.cursor()
-
             # Users table
-            c.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT UNIQUE NOT NULL,
-                    password TEXT NOT NULL
-                );
-            """)
+            with safe_execute(conn, "create users table") as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT UNIQUE NOT NULL,
+                        password TEXT NOT NULL
+                    );
+                """)
 
             # Activities table
-            c.execute("""
-                CREATE TABLE IF NOT EXISTS activities (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    date TEXT NOT NULL,
-                    type TEXT CHECK(type IN ('meeting', 'event', 'sport', 'note')) NOT NULL,
-                    title TEXT NOT NULL,
-                    description TEXT,
-                    user_id INTEGER,
-                    FOREIGN KEY(user_id) REFERENCES users(id)
-                )
-            """)
-            conn.commit()
+            with safe_execute(conn, "create activities table") as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS activities (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        date TEXT NOT NULL,
+                        type TEXT CHECK(type IN ('meeting', 'event', 'sport', 'note')) NOT NULL,
+                        title TEXT NOT NULL,
+                        description TEXT,
+                        user_id INTEGER,
+                        FOREIGN KEY(user_id) REFERENCES users(id)
+                    )
+                """)
+
             # Create users from environment variable
             for user, pwd in read_users_from_env().items():
+                logger.info("Creating user '%s' from environment variable", user)
                 sql_create_user(user, pwd, conn)
 
 
@@ -90,6 +92,25 @@ def read_users_from_env():
     user_pairs = [entry.split(":", 1) for entry in users_env.split(",") if ":" in entry]
     users_dict = {user: pwd for user, pwd in user_pairs}
     return users_dict
+
+
+@contextmanager
+def safe_execute(conn, name=None):
+    """Context manager to execute SQL with automatic commit on success
+    and rollback on exception. Yields a cursor.
+    """
+    cur = conn.cursor()
+    try:
+        yield cur
+        conn.commit()
+        logger.info("SQL executed and committed for %s", name or "statement")
+    except Exception:
+        logger.exception("SQL execution failed for %s; rolling back", name or "statement")
+        try:
+            conn.rollback()
+        except Exception:
+            logger.exception("Rollback failed for %s", name or "statement")
+        raise
 
 
 def display_env_vars():
@@ -286,5 +307,5 @@ if __name__ == "__main__":
     except Exception:
         logger.exception("init_db() failed during module import/startup")
         sys.exit(1)
-        
+
     app.run(debug=False, host="0.0.0.0", port=5000)
