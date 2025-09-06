@@ -67,7 +67,9 @@ def init_db():
                 )
             """)
             c.commit()
-            sql_create_user("demosuer", "nobloat", conn)
+            # Create users from environment variable
+            for user, pwd in read_users_from_env().items():
+                sql_create_user(user, pwd, conn)
 
 
 def read_users_from_env():
