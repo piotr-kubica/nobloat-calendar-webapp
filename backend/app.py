@@ -48,7 +48,7 @@ DB = os.path.join(DB_DIR, "activities.db")
 
 
 def init_db():
-    display_env_vars()
+    log_env_vars()
     os.makedirs(DB_DIR, exist_ok=True)
 
     # Only initialize if DB doesn't exist
@@ -113,7 +113,7 @@ def safe_execute(conn, name=None):
         raise
 
 
-def display_env_vars():
+def log_env_vars():
     print("Current Environment Variables:")
     for key, value in os.environ.items():
         try:
