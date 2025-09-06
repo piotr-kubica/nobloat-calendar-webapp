@@ -63,10 +63,16 @@ def init_db():
                     FOREIGN KEY(user_id) REFERENCES users(id)
                 )
             """)
-
-            conn.commit()
-
+            c.commit()
             sql_create_user("demosuer", "nobloat", conn)
+
+
+def read_users_from_env():
+    # example USERS env: "user1:pass1,user2:pass2"
+    users_env = os.environ.get("USERS", "")
+    user_pairs = [entry.split(":", 1) for entry in users_env.split(",") if ":" in entry]
+    users_dict = {user: pwd for user, pwd in user_pairs}
+    return users_dict
 
 
 def sql_create_user(username, password, connection):
