@@ -12,6 +12,13 @@ services:
   backend:
     build: ./backend
     expose: ["5000"]
+    env_file:
+      - .env
+    environment:
+      SECRET_KEY=${SECRET_KEY}
+      COOKIE_DOMAIN=${COOKIE_DOMAIN}
+      DOMAIN_ORIGINS=${DOMAIN_ORIGINS}
+      USERS=${USERS}
     volumes:
       - backend_data:/app/data
     restart: unless-stopped

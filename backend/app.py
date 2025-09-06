@@ -25,7 +25,7 @@ app.permanent_session_lifetime = timedelta(days=3)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 CORS(
     app, supports_credentials=True, origins=os.getenv("DOMAIN_ORIGINS", "").split(",")
-)  # "https://yourdomain.com"
+)
 
 # Keep failed attempts in memory (for rate-limiting)
 FAILED_LOGINS = {}
