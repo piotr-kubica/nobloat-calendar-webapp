@@ -16,13 +16,17 @@ app = Flask(__name__, static_folder="static")
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 app.permanent_session_lifetime = timedelta(days=7)
 app.config.update(
-    SESSION_COOKIE_SAMESITE="Lax",   # same-site requests (subdomains count as same-site)
-    SESSION_COOKIE_SECURE=True,      # only send over HTTPS (Cloudflare edge is HTTPS)
-    SESSION_COOKIE_DOMAIN=os.environ.get("COOKIE_DOMAIN", ".yourdomain.com")  # share cookie across subdomains (optional but useful)
+    SESSION_COOKIE_SAMESITE="Lax",  # same-site requests (subdomains count as same-site)
+    SESSION_COOKIE_SECURE=True,  # only send over HTTPS (Cloudflare edge is HTTPS)
+    SESSION_COOKIE_DOMAIN=os.environ.get(
+        "COOKIE_DOMAIN", ".yourdomain.com"
+    ),  # share cookie across subdomains (optional but useful)
 )
 app.permanent_session_lifetime = timedelta(days=3)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-CORS(app, supports_credentials=True, origins=os.getenv("DOMAIN_ORIGINS", "").split(","))  # "https://yourdomain.com"
+CORS(
+    app, supports_credentials=True, origins=os.getenv("DOMAIN_ORIGINS", "").split(",")
+)  # "https://yourdomain.com"
 
 # Keep failed attempts in memory (for rate-limiting)
 FAILED_LOGINS = {}
@@ -35,7 +39,7 @@ DB = os.path.join(DB_DIR, "activities.db")
 def init_db():
     os.makedirs(DB_DIR, exist_ok=True)
 
-        # Only initialize if DB doesn't exist
+    # Only initialize if DB doesn't exist
     if not os.path.exists(DB):
         print("Database not found. Creating training.db...")
 
@@ -83,7 +87,10 @@ def sql_create_user(username, password, connection):
     try:
         c.execute("SELECT id FROM users WHERE username = ?", (username,))
         if not c.fetchone():
-            c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed))
+            c.execute(
+                "INSERT INTO users (username, password) VALUES (?, ?)",
+                (username, hashed),
+            )
             c.commit()
             return True
         return False
@@ -94,9 +101,10 @@ def sql_create_user(username, password, connection):
 def login_required(f):
     @wraps(f)
     def wrapped(*args, **kwargs):
-        if 'user_id' not in session:
+        if "user_id" not in session:
             return "Unauthorized", 401
         return f(*args, **kwargs)
+
     return wrapped
 
 
@@ -116,12 +124,15 @@ def get_activities_by_month(year_month):
     like_pattern = f"{year_month}-%"
     user_id = session.get("user_id")
     with sqlite3.connect(DB) as conn:
-        rows = conn.execute("""
+        rows = conn.execute(
+            """
             SELECT id, date, type, title, description
             FROM activities
             WHERE date LIKE ? AND user_id = ?
-        """, (like_pattern, user_id)).fetchall()
-        
+        """,
+            (like_pattern, user_id),
+        ).fetchall()
+
         result = {}
         for row in rows:
             date = row[1]
@@ -129,11 +140,12 @@ def get_activities_by_month(year_month):
                 "id": row[0],
                 "type": row[2],
                 "title": row[3],
-                "description": row[4] or ""
+                "description": row[4] or "",
             }
             result.setdefault(date, []).append(activity)
 
         return jsonify(result)
+
 
 @app.route("/api/activities", methods=["POST"])
 @login_required
@@ -147,7 +159,7 @@ def add_activity():
     if not (date and type_ and title):
         return "Missing fields", 400
 
-    if type_ not in ['meeting', 'event', 'sport', 'note']:
+    if type_ not in ["meeting", "event", "sport", "note"]:
         return "Invalid activity type", 400
 
     with sqlite3.connect(DB) as conn:
@@ -156,13 +168,17 @@ def add_activity():
         if not user_id:
             return "Unauthorized", 401
 
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO activities (date, type, title, description, user_id)
             VALUES (?, ?, ?, ?, ?)
-        """, (date, type_, title, description, user_id))
+        """,
+            (date, type_, title, description, user_id),
+        )
         conn.commit()
 
     return "Created", 201
+
 
 @app.route("/api/activities/<int:activity_id>", methods=["DELETE"])
 @login_required
@@ -205,9 +221,9 @@ def login():
         FAILED_LOGINS[username] = 0
 
         # Store session
-        session['user_id'] = user_id
-        session['username'] = username
-        session['permanent'] = True
+        session["user_id"] = user_id
+        session["username"] = username
+        session["permanent"] = True
 
         return jsonify({"message": "Logged in", "user": username})
 
@@ -216,8 +232,8 @@ def login():
 @login_required
 def logout():
     # clear server-side session
-    session.pop('user_id', None)
-    session.pop('username', None)
+    session.pop("user_id", None)
+    session.pop("username", None)
     session.clear()
 
     # build response and instruct browser to remove the cookie
@@ -231,7 +247,7 @@ def logout():
     resp.delete_cookie(
         cookie_name,
         path=app.config.get("SESSION_COOKIE_PATH", "/"),
-        domain=app.config.get("SESSION_COOKIE_DOMAIN")
+        domain=app.config.get("SESSION_COOKIE_DOMAIN"),
     )
     return resp, 200
 
@@ -239,6 +255,7 @@ def logout():
 @app.route("/")
 def serve_index():
     return send_from_directory("static", "index.html")
+
 
 if __name__ == "__main__":
     init_db()
