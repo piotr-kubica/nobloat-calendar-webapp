@@ -7,9 +7,20 @@ from flask import session
 from functools import wraps
 from datetime import timedelta
 from werkzeug.middleware.proxy_fix import ProxyFix
+import sys
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Configure logging to output to stdout so Docker/container logs capture it
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder="static")
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
@@ -41,7 +52,7 @@ def init_db():
 
     # Only initialize if DB doesn't exist
     if not os.path.exists(DB):
-        print("Database not found. Creating training.db...")
+        logger.info("Database not found. Creating %s...", DB)
 
         with sqlite3.connect(DB) as conn:
             c = conn.cursor()
@@ -84,7 +95,11 @@ def read_users_from_env():
 def display_env_vars():
     print("Current Environment Variables:")
     for key, value in os.environ.items():
-        print(f"{key}: {value}")
+        try:
+            logger.info("%s=%s", key, value)
+        except Exception:
+            # Safe fallback in case of non-string values
+            logger.info("%s=<unavailable>", key)
 
 
 def sql_create_user(username, password, connection):
@@ -266,5 +281,10 @@ def serve_index():
 
 
 if __name__ == "__main__":
-    init_db()
+    try:
+        init_db()
+    except Exception:
+        logger.exception("init_db() failed during module import/startup")
+        sys.exit(1)
+        
     app.run(debug=False, host="0.0.0.0", port=5000)
