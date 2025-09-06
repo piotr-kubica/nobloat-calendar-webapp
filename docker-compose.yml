@@ -15,10 +15,10 @@ services:
     env_file:
       - .env
     environment:
-      SECRET_KEY=${SECRET_KEY}
-      COOKIE_DOMAIN=${COOKIE_DOMAIN}
-      DOMAIN_ORIGINS=${DOMAIN_ORIGINS}
-      USERS=${USERS}
+      SECRET_KEY=""
+      COOKIE_DOMAIN=""
+      DOMAIN_ORIGINS=""
+      USERS=""
     volumes:
       - backend_data:/app/data
     restart: unless-stopped
