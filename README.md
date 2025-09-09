@@ -53,11 +53,14 @@ To add a user manually:
 	```bash
 	docker exec -it nobloat-calendar-backend-1 bash
 	```
-2. Use `sqlite3` to modify the database:
-	```bash
-	sqlite3 /data/calendar.db
+2. Use `litecli` or `sqlite3` to modify the database:
+    ```bash
+	litecli /data/acitivities.db
 	```
-3. Insert a new user as needed.
+	```bash
+	sqlite3 /data/acitivities.db
+	```
+4. Insert a new user as needed.
 
 ---
 
