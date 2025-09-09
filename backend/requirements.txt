@@ -1,3 +1,6 @@
 Flask
 flask-cors
 bcrypt
+python-dotenv
+ruff
+litecli

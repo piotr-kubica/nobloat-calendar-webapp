@@ -1,0 +1,8 @@
+# Example .env file for nobloat-calendar-webapp backend
+SECRET_KEY=your-secret-key
+COOKIE_DOMAIN=.yourdomain.com
+DOMAIN_ORIGINS=https://yourdomain.com,http://localhost:3000
+USERS=demouser:nobloat,admin:adminpassword
+
+# todo: setup in code
+PORT=5000
