@@ -36,7 +36,7 @@ app.config.update(
 app.permanent_session_lifetime = timedelta(days=3)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 CORS(
-    app, supports_credentials=True, origins=os.getenv("DOMAIN_ORIGINS", "").split(",")
+    app, supports_credentials=True, origins=[origin.strip() for origin in os.getenv("DOMAIN_ORIGINS", "").split(",") if origin.strip()]
 )
 
 # Keep failed attempts in memory (for rate-limiting)
